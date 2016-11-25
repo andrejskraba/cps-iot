@@ -36,7 +36,7 @@ http.createServer(function(req, res) {
     
     res.writeHead(200, {"Content-Type": "text/plain"}); // 200=OK
     res.write("For test write into browser e.g. 123.1.2.3:8080/1 \n");
-    res.end("The value of the operator is: " + operator);
+    res.end("The value of the operator is: " + operator1 + "|" + operator2);
     
 }).listen(8080, "172.16.22.240"); // listen on port 8080
 
