@@ -19,6 +19,7 @@
 <br>
 <canvas id="canvas3" width = "200" height = "100" style="border: 1px dashed #00c3c3;"></canvas>
 <canvas id="canvas6" width = "200" height = "100" style="border: 1px dashed #00c3c3;"></canvas>
+<canvas id="canvas9" width = "200" height = "100" style="border: 1px dashed #00c3c3;"></canvas>
 <p></p>
 Set Algorithm: <input id="whichAlgorithm" value=1 />
 Position: <input id="position" value=512 />    
@@ -26,6 +27,8 @@ Position: <input id="position" value=512 />
 <p></p>
 Pulse duration in s: <input id="pulseDuration" value="7" size="5" />
 <button id="pulse" onClick="pulseTimed()">Send pulse</button>
+<button id="pulse2" onClick="pulseTimed2();">Send Test Input</button>
+<button id="pulse3" onClick="pulseTimed3();">Send Step</button>
 <button id="buttonStop" onClick="stop()">Stop pulse</button>
 <button id="testFunction" onClick="startTestFunction()">Send test Fun</button>
 <br>
@@ -77,6 +80,7 @@ var canvas2;
 var ctx1;
 var ctx2;
 var pwm;
+var performanceMeasure = 0;
 
 // variable for P part
 var x4 = new Array(); // array for x4 variable
@@ -119,6 +123,10 @@ var y10 = new Array(); // array  of values
 var x11 = new Array(); // array for x11 variable
 var y11 = new Array(); // array for y11 variable
 
+// variable for abs error
+var x12 = new Array(); // array for x11 variable
+var y12 = new Array(); // array for y11 variable
+
 function load() { // function that is started, when we open the page
     canvas1 = document.getElementById("canvas1");
     ctx1 = canvas1.getContext("2d");
@@ -148,7 +156,11 @@ function load() { // function that is started, when we open the page
     
     // initialization for canvas8
     canvas8 = document.getElementById("canvas8");
-    ctx8 = canvas8.getContext("2d"); 
+    ctx8 = canvas8.getContext("2d");
+    
+    // initialization for canvas8
+    canvas9 = document.getElementById("canvas9");
+    ctx9 = canvas9.getContext("2d");     
 
     // initialization of first graph
     for (var i=0; i<200; i++) {
@@ -216,6 +228,12 @@ function load() { // function that is started, when we open the page
         y11[i] = 0; // for y values are 0
     };
     
+    // initialize xy12
+    for (var i=0; i<200; i++) {
+        x12[i] = i; // for x values are 0, 1, 2, ...
+        y12[i] = 0; // for y values are 0
+    };
+    
 };
 
 var divForPrint = document.getElementById("divForPrint");
@@ -258,7 +276,7 @@ socket.on("clientReadValues", function(value) {
 
     ctx1.lineWidth = "1";
     ctx1.strokeStyle = "#ff0000";
-    ctx1.clearRect(0, 0, canvas1.width, canvas1.height); // clear the canvas
+     ctx1.clearRect(0, 0, canvas1.width, canvas1.height); // clear the canvas
     
     // add legend to graph
     
@@ -364,8 +382,8 @@ socket.on("clientReadValues", function(value) {
     ctx3.strokeStyle = "#00ff00";
     ctx3.beginPath(); // beginning of legend line draw
     ctx3.lineTo(85, 6);
-     ctx3.lineTo(100, 6);
-     ctx3.stroke(); // end of legend line draw
+    ctx3.lineTo(100, 6);
+    ctx3.stroke(); // end of legend line draw
 
     ctx3.font = "11px Arial";
     ctx3.fillText("KdDe_dt",155,10);    
@@ -415,137 +433,137 @@ socket.on("clientReadValues", function(value) {
     ctx3.stroke(); // to draw the line
     
     
-// END Draw line 1 on canvas3 *************************************
+    // END Draw line 1 on canvas3 *************************************
 
-// Draw second line on canvas3 **********************************************
+    // Draw second line on canvas3 **********************************************
 
 
 
-// Draw canvas3 END ************************************
+    // Draw canvas3 END ************************************
 
-// Draw canvas4 graph for P part **********************************************
-ctx4.clearRect(0, 0, canvas4.width, canvas4.height); // clear canvas only ONCE!
+    // Draw canvas4 graph for P part **********************************************
+    ctx4.clearRect(0, 0, canvas4.width, canvas4.height); // clear canvas only ONCE!
 
-// draw line at coordinate 0
-ctx4.lineWidth = "1";
-ctx4.strokeStyle = "#ff7f7f"; // light red
-ctx4.beginPath(); // beginning of the line
-ctx4.lineTo(0, 50); // starting point
-ctx4.lineTo(200, 50); // ending point
-ctx4.stroke(); // to put it on the graph
+    // draw line at coordinate 0
+    ctx4.lineWidth = "1";
+    ctx4.strokeStyle = "#ff7f7f"; // light red
+    ctx4.beginPath(); // beginning of the line
+    ctx4.lineTo(0, 50); // starting point
+    ctx4.lineTo(200, 50); // ending point
+    ctx4.stroke(); // to put it on the graph
      
-// put on the legend
-ctx4.font = "11px Arial";
-ctx4.fillText("Error",70,10);
-ctx4.strokeStyle = "#ff0000";
-ctx4.beginPath(); // beginning of legend line draw
-ctx4.lineTo(50, 6);
-ctx4.lineTo(65, 6);
-ctx4.stroke(); // end of legend line draw
+    // put on the legend
+    ctx4.font = "11px Arial";
+    ctx4.fillText("Error",70,10);
+    ctx4.strokeStyle = "#ff0000";
+    ctx4.beginPath(); // beginning of legend line draw
+    ctx4.lineTo(50, 6);
+    ctx4.lineTo(65, 6);
+    ctx4.stroke(); // end of legend line draw
 
-// draw P
-ctx4.lineWidth = "1";
-ctx4.strokeStyle = "#ff0000"; // set red color
-ctx4.beginPath(); // to start drawing new line
-y4.splice(0, 1); // on the position 0 in the field y3 we erase one value
-y4[199] = value.err; // new value is added at the end
-for (var i=0; i<200; i++) {
-         ctx4.lineTo(x4[i], (100 - (1024 + y4[i]) / 2048 * 100)); // 0,0 x,y coordinate is in upper left corner
-};
-ctx4.stroke(); // to draw the line
+    // draw P
+    ctx4.lineWidth = "1";
+    ctx4.strokeStyle = "#ff0000"; // set red color
+    ctx4.beginPath(); // to start drawing new line
+    y4.splice(0, 1); // on the position 0 in the field y3 we erase one value
+    y4[199] = value.err; // new value is added at the end
+    for (var i=0; i<200; i++) {
+             ctx4.lineTo(x4[i], (100 - (1024 + y4[i]) / 2048 * 100)); // 0,0 x,y coordinate is in upper left corner
+    };
+    ctx4.stroke(); // to draw the line
      
-// add axis labels
-ctx4.font = "10px Arial";
-// x-axis label
-ctx4.fillText("<-"+ 0 + "|" + 200 + "->", 155, 100-5); // display number of points on x-axis
-// min on y-axis label:
-//ctx4.textBaseline="top"; // to print font 5 px from top
-ctx4.fillText(1024,5,11); // values for y axis
-ctx4.fillText(-1024,5,100-5);
-
-// END of draw canvas4 graph for P part **********************************************
-     
-// Draw canvas5 graph for I part **********************************************
-ctx5.clearRect(0, 0, canvas5.width, canvas5.height); // clear canvas only ONCE!
-     
-// draw line at coordinate 0
-ctx5.lineWidth = "1";
-ctx5.strokeStyle = "#90ee90"; // light green
-ctx5.beginPath(); // beginning of the line
-ctx5.lineTo(0, 50); // starting point
-ctx5.lineTo(200, 50); // ending point
-ctx5.stroke(); // to put it on the graph
-     
-// put on the legend
-ctx5.font = "11px Arial";
-ctx5.fillText("Integ(Error*dt)",70,10);
-ctx5.strokeStyle = "#00ff00";
-ctx5.beginPath(); // beginning of legend line draw
-ctx5.lineTo(50, 6);
-ctx5.lineTo(65, 6);
-ctx5.stroke(); // end of legend line draw
-     
-// draw I
-ctx5.lineWidth = "1";
-ctx5.strokeStyle = "#00ff00"; // set green color
-ctx5.beginPath(); // to start drawing new line
-y5.splice(0, 1); // on the position 0 in the field y3 we erase one value
-y5[199] = value.errSum; // new value is added at the end
-for (var i=0; i<200; i++) {
-ctx5.lineTo(x5[i], (100 - (10000 + y5[i]) / 20000 * 100)); // 0,0 x,y coordinate is in upper left corner
-};
-ctx5.stroke(); // to draw the line
-     
-// add axis labels
-ctx5.font = "10px Arial";
-// x-axis label
-ctx5.fillText("<-"+ 0 + "|" + 200 + "->", 155, 100-5); // display number of points on x-axis
-// min on y-axis label:
-//ctx5.textBaseline="top"; // to print font 5 px from top
-ctx5.fillText(10000,5,11); // values for y axis
-ctx5.fillText(-10000,5,100-5);
-
-// END of draw canvas5 graph for i part **********************************************
-
-// Draw canvas6 graph for D part **********************************************
-ctx6.clearRect(0, 0, canvas6.width, canvas6.height); // clear canvas only ONCE!
-     
-// draw line at coordinate 0
-ctx6.lineWidth = "1";
-ctx6.strokeStyle = "#add8e6"; // light blue
-ctx6.beginPath(); // beginning of the line
-ctx6.lineTo(0, 50); // starting point
-ctx6.lineTo(200, 50); // ending point
-ctx6.stroke(); // to put it on the graph
-     
-// put on the legend
-ctx6.font = "11px Arial";
-ctx6.fillText("dError/dt",70,10);
-ctx6.strokeStyle = "#0000ff";
-ctx6.beginPath(); // beginning of legend line draw
-ctx6.lineTo(50, 6);
-ctx6.lineTo(65, 6);
-ctx6.stroke(); // end of legend line draw
-     
-// draw I
-ctx6.lineWidth = "1";
-ctx6.strokeStyle = "#0000ff"; // set blue color
-ctx6.beginPath(); // to start drawing new line
-y6.splice(0, 1); // on the position 0 in the field y3 we erase one value
-y6[199] = value.dErr; // new value is added at the end
-for (var i=0; i<200; i++) {
-ctx6.lineTo(x6[i], (100 - (150 + y6[i]) / 300 * 100)); // 0,0 x,y coordinate is in upper left corner
-};
-ctx6.stroke(); // to draw the line
-     
-// add axis labels
-ctx6.font = "10px Arial";
-// x-axis label
-ctx6.fillText("<-"+ 0 + "|" + 200 + "->", 155, 100-5); // display number of points on x-axis
-// min on y-axis label:
-//ctx6.textBaseline="top"; // to print font 5 px from top
-ctx6.fillText(150,5,11); // values for y axis
-ctx6.fillText(-150,5,100-5);
+    // add axis labels
+    ctx4.font = "10px Arial";
+    // x-axis label
+    ctx4.fillText("<-"+ 0 + "|" + 200 + "->", 155, 100-5); // display number of points on x-axis
+    // min on y-axis label:
+    //ctx4.textBaseline="top"; // to print font 5 px from top
+    ctx4.fillText(1024,5,11); // values for y axis
+    ctx4.fillText(-1024,5,100-5);
+    
+    // END of draw canvas4 graph for P part **********************************************
+         
+    // Draw canvas5 graph for I part **********************************************
+    ctx5.clearRect(0, 0, canvas5.width, canvas5.height); // clear canvas only ONCE!
+         
+    // draw line at coordinate 0
+    ctx5.lineWidth = "1";
+    ctx5.strokeStyle = "#90ee90"; // light green
+    ctx5.beginPath(); // beginning of the line
+    ctx5.lineTo(0, 50); // starting point
+    ctx5.lineTo(200, 50); // ending point
+    ctx5.stroke(); // to put it on the graph
+         
+    // put on the legend
+    ctx5.font = "11px Arial";
+    ctx5.fillText("Integ(Error*dt)",70,10);
+    ctx5.strokeStyle = "#00ff00";
+    ctx5.beginPath(); // beginning of legend line draw
+    ctx5.lineTo(50, 6);
+    ctx5.lineTo(65, 6);
+    ctx5.stroke(); // end of legend line draw
+         
+    // draw I
+    ctx5.lineWidth = "1";
+    ctx5.strokeStyle = "#00ff00"; // set green color
+    ctx5.beginPath(); // to start drawing new line
+    y5.splice(0, 1); // on the position 0 in the field y3 we erase one value
+    y5[199] = value.errSum; // new value is added at the end
+    for (var i=0; i<200; i++) {
+    ctx5.lineTo(x5[i], (100 - (10000 + y5[i]) / 20000 * 100)); // 0,0 x,y coordinate is in upper left corner
+    };
+    ctx5.stroke(); // to draw the line
+         
+    // add axis labels
+    ctx5.font = "10px Arial";
+    // x-axis label
+    ctx5.fillText("<-"+ 0 + "|" + 200 + "->", 155, 100-5); // display number of points on x-axis
+    // min on y-axis label:
+    //ctx5.textBaseline="top"; // to print font 5 px from top
+    ctx5.fillText(10000,5,11); // values for y axis
+    ctx5.fillText(-10000,5,100-5);
+    
+    // END of draw canvas5 graph for i part **********************************************
+    
+    // Draw canvas6 graph for D part **********************************************
+    ctx6.clearRect(0, 0, canvas6.width, canvas6.height); // clear canvas only ONCE!
+         
+    // draw line at coordinate 0
+    ctx6.lineWidth = "1";
+    ctx6.strokeStyle = "#add8e6"; // light blue
+    ctx6.beginPath(); // beginning of the line
+    ctx6.lineTo(0, 50); // starting point
+    ctx6.lineTo(200, 50); // ending point
+    ctx6.stroke(); // to put it on the graph
+         
+    // put on the legend
+    ctx6.font = "11px Arial";
+    ctx6.fillText("dError/dt",70,10);
+    ctx6.strokeStyle = "#0000ff";
+    ctx6.beginPath(); // beginning of legend line draw
+    ctx6.lineTo(50, 6);
+    ctx6.lineTo(65, 6);
+    ctx6.stroke(); // end of legend line draw
+         
+    // draw I
+    ctx6.lineWidth = "1";
+    ctx6.strokeStyle = "#0000ff"; // set blue color
+    ctx6.beginPath(); // to start drawing new line
+    y6.splice(0, 1); // on the position 0 in the field y3 we erase one value
+    y6[199] = value.dErr; // new value is added at the end
+    for (var i=0; i<200; i++) {
+    ctx6.lineTo(x6[i], (100 - (150 + y6[i]) / 300 * 100)); // 0,0 x,y coordinate is in upper left corner
+    };
+    ctx6.stroke(); // to draw the line
+         
+    // add axis labels
+    ctx6.font = "10px Arial";
+    // x-axis label
+    ctx6.fillText("<-"+ 0 + "|" + 200 + "->", 155, 100-5); // display number of points on x-axis
+    // min on y-axis label:
+    //ctx6.textBaseline="top"; // to print font 5 px from top
+    ctx6.fillText(150,5,11); // values for y axis
+    ctx6.fillText(-150,5,100-5);
      
     // END of draw canvas6 graph for D part **********************************************  
      
@@ -592,36 +610,68 @@ ctx6.fillText(-150,5,100-5);
     // put on the legend
     ctx8.font = "11px Arial";
     ctx8.fillText("errAbs",70,10);
-ctx8.strokeStyle = "#ff0000";
-ctx8.beginPath(); // beginning of legend line draw
-ctx8.lineTo(50, 6);
-ctx8.lineTo(65, 6);
-ctx8.stroke(); // end of legend line draw
-
-// draw I
-ctx8.lineWidth = "1";
-ctx8.strokeStyle = "#ff0000"; // set red color
-ctx8.beginPath(); // to start drawing new line
-y11.splice(0, 1); // on the position 0 in the field y3 we erase one value
-y11[199] = value.errAbs; // new value is added at the end
-for (var i=0; i<200; i++) {
-ctx8.lineTo(x11[i], (100 - (y11[i]) / 1000 * 100)); // 0,0 x,y coordinate is in upper left corner
-};
-ctx8.stroke(); // to draw the line
-
-// add axis labels
-ctx8.font = "10px Arial";
-// x-axis label
-ctx8.fillText("<-"+ 0 + "|" + 200 + "->", 155, 100-5); // display number of points on x-axis
-// min on y-axis label:
-//ctx8.textBaseline="top"; // to print font 5 px from top
-ctx8.fillText(1000,5,11); // values for y axis
-ctx8.fillText(0,5,100-5);
-
-// END of draw canvas8 graph for errAbs **********************************************
-     
+    ctx8.strokeStyle = "#ff0000";
+    ctx8.beginPath(); // beginning of legend line draw
+    ctx8.lineTo(50, 6);
+    ctx8.lineTo(65, 6);
+    ctx8.stroke(); // end of legend line draw
     
+    // draw I
+    ctx8.lineWidth = "1";
+    ctx8.strokeStyle = "#ff0000"; // set red color
+    ctx8.beginPath(); // to start drawing new line
+    y11.splice(0, 1); // on the position 0 in the field y3 we erase one value
+    y11[199] = value.errAbs; // new value is added at the end
+    for (var i=0; i<200; i++) {
+    ctx8.lineTo(x11[i], (100 - (y11[i]) / 1000 * 100)); // 0,0 x,y coordinate is in upper left corner
+    };
+    ctx8.stroke(); // to draw the line
     
+    // add axis labels
+    ctx8.font = "10px Arial";
+    // x-axis label
+    ctx8.fillText("<-"+ 0 + "|" + 200 + "->", 155, 100-5); // display number of points on x-axis
+    // min on y-axis label:
+    //ctx8.textBaseline="top"; // to print font 5 px from top
+    ctx8.fillText(1000,5,11); // values for y axis
+    ctx8.fillText(0,5,100-5);
+    
+    // END of draw canvas8 graph for errAbs **********************************************
+    
+    // Draw canvas9 for motor input **********************************************
+    ctx9.clearRect(0, 0, canvas9.width, canvas9.height); // clear canvas only ONCE!
+ 
+    // put on the legend
+    ctx9.font = "11px Arial";
+    ctx9.fillText("Input",70,10);
+    ctx9.strokeStyle = "#ff0000";
+    ctx9.beginPath(); // beginning of legend line draw
+    ctx9.lineTo(50, 6);
+    ctx9.lineTo(65, 6);
+    ctx9.stroke(); // end of legend line draw
+    
+    // draw I
+    ctx9.lineWidth = "1";
+    ctx9.strokeStyle = "#ff0000"; // set red color
+    ctx9.beginPath(); // to start drawing new line
+    y12.splice(0, 1); // on the position 0 in the field y3 we erase one value
+    y12[199] = value.errAbs; // new value is added at the end
+    for (var i=0; i<200; i++) {
+    ctx9.lineTo(x12[i], (100 - (y12[i]) / 1000 * 100)); // 0,0 x,y coordinate is in upper left corner
+    };
+    ctx9.stroke(); // to draw the line
+    
+    // add axis labels
+    ctx9.font = "10px Arial";
+    // x-axis label
+    ctx9.fillText("<-"+ 0 + "|" + 200 + "->", 155, 100-5); // display number of points on x-axis
+    // min on y-axis label:
+    //ctx9.textBaseline="top"; // to print font 5 px from top
+    ctx9.fillText(1000,5,11); // values for y axis
+    ctx9.fillText(0,5,100-5);
+    
+    // END of draw canvas9 graph for Input **********************************************    
+         
     log(value.desiredValue + "|" + value.actualValue + "|" + (value.desiredValue-value.actualValue) + "|" + (value.pwm).toFixed(0));
 })
 
@@ -636,8 +686,7 @@ function startControlAlgorithm2() {
     Kp1 = document.getElementById("Kp1").value; // read the value of coeff from input field
     Ki1 = document.getElementById("Ki1").value; // read the value of coeff from input field
     Kd1 = document.getElementById("Kd1").value; // read the value of coeff from input field
-    socket.emit("startControlAlgorithm", {
-        "ctrlAlgNo": 2, "Kp1": Kp1, "Ki1": Ki1, "Kd1": Kd1}); // send value of coeff
+    socket.emit("startControlAlgorithm", {"ctrlAlgNo": 2, "Kp1": Kp1, "Ki1": Ki1, "Kd1": Kd1}); // send value of coeff
 }
 
 function sendPosition () {
@@ -663,26 +712,53 @@ function sendPosition () {
     }, 2500);
     }
     
+    function inputPulse() {
+    
+    var input = 0; // tole je tokrat kar pwm
+    socket.emit("sendInput", input); // at start we send position
+    
+    intervalPulseFunction = setInterval(function() {
+        if (input == 102) {
+            input = -102;
+        }
+        else {
+            input = 102
+        }
+        socket.emit("sendInput", input);
+    }, 400);
+    }
+    
+    function inputStep() {
+    
+    var input = 200; // tole je tokrat kar pwm
+    socket.emit("sendStep", input); // at start we send position
+    
+    setTimeout(function() {
+            input = 820
+        socket.emit("sendStep", input);
+    }, 6000);
+    }     
+    
     var functionValue = 0;
 
 function testFunction() {
 var initialValue = 256;
 switch (timeCounter >= 0) {
-case (timeCounter <= 1000):
+    case (timeCounter <= 1000):
          functionValue = initialValue + 0.5 * timeCounter;
-break;
-case (timeCounter > 1000 && timeCounter <= 1500):
-functionValue = 256 + 500 + (-0.5 * (timeCounter - 1000)); // 500 = previous max value
-break;
-case (timeCounter > 1500 && timeCounter <= 2000):
+    break;
+    case (timeCounter > 1000 && timeCounter <= 1500):
+        functionValue = 256 + 500 + (-0.5 * (timeCounter - 1000)); // 500 = previous max value
+    break;
+    case (timeCounter > 1500 && timeCounter <= 2000):
          functionValue = 506 + (0.5 * (timeCounter - 1500));
-     break;
-case (timeCounter > 2000 && timeCounter <= 3000):
-functionValue = 756 - 500 + 500 * Math.exp(-0.005 * (timeCounter - 2000));  // 756 - previous val; (756-220) - limit val
-}
-socket.emit("sendPosition", functionValue); // at start we send position
-timeCounter++;
-console.log(functionValue + "|" + timeCounter);
+    break;
+    case (timeCounter > 2000 && timeCounter <= 3000):
+        functionValue = 756 - 500 + 500 * Math.exp(-0.005 * (timeCounter - 2000));  // 756 - previous val; (756-220) - limit val
+    }
+    socket.emit("sendPosition", functionValue); // at start we send position
+    timeCounter++;
+    console.log(functionValue + "|" + timeCounter);
 }
 
 function startTestFunction () {
@@ -714,6 +790,26 @@ clearInterval(intervalTestFunction);
     setTimeout(function() {performanceMeasure = y10[1999]; stop();}, pulseDuration * 1000); // 30000
     }
     
+    function pulseTimed2 () {
+    // first stop ctrlAlg, just in case
+    document.getElementById("whichAlgorithm").value = 5;
+    stopControlAlgorithm ();
+    switchAlgorihtm();
+    inputPulse(); // starting pulse function for INPUT
+    pulseDuration = document.getElementById("pulseDuration").value;
+    setTimeout(function() {stop();}, pulseDuration * 1000); // 30000
+    }
+    
+    function pulseTimed3 () {
+    // first stop ctrlAlg, just in case
+    document.getElementById("whichAlgorithm").value = 6;
+    stopControlAlgorithm ();
+    switchAlgorihtm();
+    inputStep(); // starting pulse function for INPUT
+    //pulseDuration = document.getElementById("pulseDuration").value;
+    //setTimeout(function() {stop();}, pulseDuration * 1000); // 30000
+    }        
+    
     function switchAlgorihtm () {
     whichAlgorithm = document.getElementById("whichAlgorithm").value;
     switch (whichAlgorithm) {
@@ -728,6 +824,12 @@ clearInterval(intervalTestFunction);
          break;        
     case "4":
         startControlAlgorithm4();
+        break;
+    case "5":
+        startControlAlgorithm5();
+        break;
+    case "6":
+        startControlAlgorithm6();        
     }        
     }
 
@@ -748,23 +850,15 @@ Kd3 = document.getElementById("Kd3").value; // read the value of coeff from inpu
 socket.emit("startControlAlgorithm", {"ctrlAlgNo": 4, "Kp3": Kp3, "Ki3": Ki3, "Kd3": Kd3}); // send value of coeff
 }
 
-  function switchAlgorihtm () {
-	      whichAlgorithm = document.getElementById("whichAlgorithm").value;
-	      switch (whichAlgorithm) {
-	      case "1":
-	          startControlAlgorithm1();
-	          break;
-	      case "2":
-	          startControlAlgorithm2();
-	          break;
-	      case "3":
-	          startControlAlgorithm3();
-break;        
-case "4":
-startControlAlgorithm4();
-	      }
-	  }
-	
+function startControlAlgorithm5() {
+    stopControlAlgorithm(); // just in case, if it is not started
+    socket.emit("startControlAlgorithm", {"ctrlAlgNo": 5}); // send value of coeff
+}
+
+function startControlAlgorithm6() {
+    stopControlAlgorithm(); // just in case, if it is not started
+    socket.emit("startControlAlgorithm", {"ctrlAlgNo": 6}); // send value of coeff
+}
 
 function stopControlAlgorithm() {
     socket.emit("stopControlAlgorithm");
